@@ -78,19 +78,19 @@ async fn get_temperatures(Query(params): Query<QueryParams>) -> Result<Json<Temp
         }
     };
 
-    // Query for minutely average (last 1 minute)
+    // Query for minutely maximum (last 1 minute)
     let minutely_query = format!(
-        "avg_over_time(node_hwmon_temp_celsius[1m])"
+        "max_over_time(node_hwmon_temp_celsius[1m])"
     );
     
-    // Query for hourly average (last 1 hour)
+    // Query for hourly maximum (last 1 hour)
     let hourly_query = format!(
-        "avg_over_time(node_hwmon_temp_celsius[1h])"
+        "max_over_time(node_hwmon_temp_celsius[1h])"
     );
     
-    // Query for daily average (last 1 day)
+    // Query for daily maximum (last 1 day)
     let daily_query = format!(
-        "avg_over_time(node_hwmon_temp_celsius[1d])"
+        "max_over_time(node_hwmon_temp_celsius[1d])"
     );
 
     // Fetch all three time ranges
@@ -231,23 +231,22 @@ fn process_temperature_data(
             .push((minutely_temp, hourly_temp, daily_temp));
     }
 
-    // Create blade names using the IP to node mapping and average temperatures
+    // Create blade names using the IP to node mapping and maximum temperatures
     for (instance, temps) in instance_groups {
         let blade_name = instance_to_blade_name(&instance, ip_to_node_map);
         
         if !temps.is_empty() {
-            let count = temps.len() as f64;
-            let (sum_min, sum_hour, sum_day) = temps.iter().fold((0.0, 0.0, 0.0), |acc, &(m, h, d)| {
-                (acc.0 + m, acc.1 + h, acc.2 + d)
+            let (max_min, max_hour, max_day) = temps.iter().fold((f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY), |acc, &(m, h, d)| {
+                (acc.0.max(m), acc.1.max(h), acc.2.max(d))
             });
 
             blade_temperatures.insert(
                 blade_name.clone(),
                 TemperatureMeasurement {
                     node: blade_name,
-                    minutely_temperature: (sum_min / count * 10.0).round() / 10.0, // Round to 1 decimal
-                    hourly_temperature: (sum_hour / count).round(),                 // Round to integer
-                    daily_temperature: (sum_day / count * 10.0).round() / 10.0,    // Round to 1 decimal
+                    minutely_temperature: (max_min * 10.0).round() / 10.0, // Round to 1 decimal
+                    hourly_temperature: max_hour.round(),                   // Round to integer
+                    daily_temperature: (max_day * 10.0).round() / 10.0,    // Round to 1 decimal
                 },
             );
         }
