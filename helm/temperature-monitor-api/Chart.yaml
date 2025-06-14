@@ -1,0 +1,18 @@
+apiVersion: v2
+name: temperature-monitor-api
+description: A Helm chart for temperature-monitor-api server
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - rust
+  - api
+  - monitoring
+  - temperature
+  - backend
+home: https://github.com/your-org/temperature-monitor-api
+sources:
+  - https://github.com/your-org/temperature-monitor-api
+maintainers:
+  - name: Development Team
+    email: dev@example.com

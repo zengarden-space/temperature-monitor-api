@@ -1,0 +1,6 @@
+ingress:
+  hosts:
+    - host: temperature-monitor.branch-{{BRANCH_ID}}.zengarden.space
+      paths:
+        - path: /api
+          pathType: Prefix
