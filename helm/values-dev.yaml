@@ -2,7 +2,7 @@ ingress:
   enabled: true
   className: "external"
   hosts:
-    - host: temperature-monitor.zengarden.space
+    - host: t.zengarden.space
       paths:
         - path: /api
           pathType: Prefix
