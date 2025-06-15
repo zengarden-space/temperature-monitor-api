@@ -3,13 +3,19 @@ FROM rust:1.82-slim AS builder
 
 WORKDIR /app
 
-# Copy manifest files
+# Copy manifest files first
 COPY Cargo.toml Cargo.lock ./
 
-# Copy source code
+# Create a dummy main.rs to build dependencies
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+
+# Build dependencies (this will be cached unless Cargo.toml/Cargo.lock changes)
+RUN cargo build --release && rm src/main.rs
+
+# Copy actual source code
 COPY src ./src
 
-# Build the application
+# Build the application (only your code will be recompiled)
 RUN cargo build --release
 
 # Runtime stage
