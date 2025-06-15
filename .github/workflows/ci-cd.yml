@@ -60,14 +60,14 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Lint Helm chart
-        run: helm lint ./helm/temperature-monitor-api
+        run: helm lint ./helm/$(echo ${{github.repository}} | cut -d'/' -f2)
 
       - name: Update Helm values
         run: |
           repo_name=$(echo ${{github.repository}} | cut -d'/' -f2)
           tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n +3 | tail -n 1 | cut -d':' -f2)
           echo "Using tag: $tag"
-          helm template $repo_name ./helm/temperature-monitor-api \
+          helm template $repo_name ./helm/$repo_name \
             --namespace $repo_name \
             --values ./helm/values-dev.yaml \
             --set image.tag=$tag > manifest.yaml
@@ -87,7 +87,47 @@ jobs:
           git config --local user.name "Gitea Actions Bot"
           git config --local user.email "gitea-actions[bot]@users.noreply.zengarden.space"
           mkdir -p ./$repo_name/dev
-          cp ../manifest.yaml ./$repo_name/dev/manifest.yaml
-          git add .
-          git commit -m "${{ github.repository }}: ${{ github.event.head_commit.message }} ${{github.sha}}"
-          git push
+          
+          # Retry loop for git operations
+          for attempt in {1..5}; do
+            echo "Attempt $attempt of 5"
+            
+            # Pull latest changes
+            if ! git pull origin main; then
+              echo "Failed to pull on attempt $attempt"
+              continue
+            fi
+            
+            # Copy manifest and add files
+            cp ../manifest.yaml ./$repo_name/dev/manifest.yaml
+            git add .
+            
+            # Check if there are changes to commit
+            if git diff --cached --quiet; then
+              echo "No changes to commit"
+              break
+            fi
+            
+            # Commit changes
+            if ! git commit -m "${{ github.repository }}: ${{ github.event.head_commit.message }} ${{github.sha}}"; then
+              echo "Failed to commit on attempt $attempt"
+              git reset --hard HEAD
+              continue
+            fi
+            
+            # Try to push
+            if git push origin main; then
+              echo "Successfully pushed on attempt $attempt"
+              break
+            else
+              echo "Failed to push on attempt $attempt, discarding commit"
+              git reset --hard HEAD~1
+              
+              if [ $attempt -eq 5 ]; then
+                echo "Failed to push after 5 attempts"
+                exit 1
+              fi
+              
+              sleep $((attempt * 2))  # Exponential backoff
+            fi
+          done
