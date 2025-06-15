@@ -16,7 +16,7 @@ RUN cargo build --release && rm src/main.rs
 COPY src ./src
 
 # Build the application (only your code will be recompiled)
-RUN cargo build --release
+RUN rm target/*/temperature-monitor-api* && cargo build --release
 
 # Runtime stage
 FROM debian:bookworm-slim
