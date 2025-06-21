@@ -86,7 +86,6 @@ jobs:
           cd manifests
           git config --local user.name "Gitea Actions Bot"
           git config --local user.email "gitea-actions[bot]@users.noreply.zengarden.space"
-          mkdir -p ./manifests/$repo_name
           
           # Retry loop for git operations
           for attempt in {1..5}; do
@@ -99,6 +98,7 @@ jobs:
             fi
             
             # Copy manifest and add files
+            mkdir -p ./manifests/$repo_name
             cp ../manifest.yaml ./manifests/$repo_name/manifest.yaml
             git add .
             
