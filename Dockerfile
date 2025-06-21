@@ -3,20 +3,14 @@ FROM rust:1.82-slim AS builder
 
 WORKDIR /app
 
-# Copy manifest files first
+# Copy manifest files
 COPY Cargo.toml Cargo.lock ./
 
-# Create a dummy main.rs to build dependencies
-RUN mkdir src && echo "fn main() {}" > src/main.rs
-
-# Build dependencies (this will be cached unless Cargo.toml/Cargo.lock changes)
-RUN cargo build --release && rm src/main.rs
-
-# Copy actual source code
+# Copy source code
 COPY src ./src
 
-# Build the application (only your code will be recompiled)
-RUN rm target/*/temperature-monitor-api* && cargo build --release
+# Build the application
+RUN cargo build --release
 
 # Runtime stage
 FROM debian:bookworm-slim
