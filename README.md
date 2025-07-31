@@ -132,4 +132,3 @@ The service queries the following Prometheus metrics:
 1. **Connection errors**: Ensure Victoria Metrics service is accessible
 2. **No data**: Check that node exporters are running and collecting temperature metrics
 3. **Port conflicts**: Change the server port in main.rs if needed
-
