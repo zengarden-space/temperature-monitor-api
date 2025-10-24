@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: gitea.zengarden.space
+  REGISTRY: gitea.homelab.int.zengarden.space
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.server_url == 'https://gitea.zengarden.space'
+    if: github.ref == 'refs/heads/main' && github.server_url == 'https://gitea.homelab.int.zengarden.space'
     permissions:
       contents: read
       packages: write
